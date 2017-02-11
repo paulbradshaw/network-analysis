@@ -1,0 +1,130 @@
+Neo4j
+
+In Terminal, install neo4j and java - using Homebrew if installed
+# install java first
+brew cask install java
+# install neo4j 
+brew install neo4j
+neo4j start
+http://localhost:7474/
+
+HOLD DOWN SHIFT AND ENTER TO CREATE NEW LINES IN CODE BEFORE RUNNING
+
+To create a node, you need to use the following syntax: 
+CREATE (x:Label {property:value})
+
+CREATE (k:Person {name:'Paul'})
+CREATE (m:Person {name:'Pauline'})
+CREATE (k)-[:KNOWS]->(m)
+
+DO NOT ENTER UNTIL ALL LINES HAVE BEEN ENTERED
+
+THEN CLICK ON DATABASE ICON ON LEFT THEN SELECT NODE LABEL
+
+LINE. is followed by the column name
+
+LOAD CSV WITH HEADERS FROM "https://raw.githubusercontent.com/leilahaddou/leilahaddou.github.io/master/CIJSummer/CashDonations.csv" AS LINE
+CREATE (d:Donor {donor : line.DonorName, companyno : line.CompanyNumber})
+CREATE (r:Recipient {recipient : line.RegulatedEntityName})
+CREATE (d)-[:DONATED_TO]->(r)
+
+
+If it's a number we need to convert it to integer like so:
+CREATE (d)-[:DONATED_TO {toInt(amount:line.Value)}]->(r)
+
+If we change create to merge it will treat same entities as same
+MERGE (d:Donor {donor : line.DonorName, companyno : line.CompanyNumber})
+MERGE (r:Recipient {recipient : line.RegulatedEntityName})
+
+
+LOAD CSV WITH HEADERS FROM "" AS line
+MATCH (d:Donor {companyNumber: line:CompanyRegistrationNumber})
+MERGE (o:Officer {officerName: line.officerName})
+CREATE (o)-[:OFFICER_OF]->(d)
+
+So what are we matching?
+Electoral Commission data shows recipient, party, donor name, company number
+Open Corporates data shows company number, director name
+
+## Trying with academies
+
+
+LOAD CSV WITH HEADERS FROM "https://github.com/paulbradshaw/commandline/blob/master/neo4js/dirsoutput_deduplicated.csv" AS DIRS
+CREATE (d:Officer {officername : DIRS.officerName})
+CREATE (r:Company {companyname : DIRS.companyName})
+CREATE (d)-[:DIRECTOR_OF]->(r)
+
+LOAD CSV WITH HEADERS FROM "https://github.com/paulbradshaw/commandline/blob/master/neo4js/dirsoutput_deduplicated.csv" AS DIRS
+MERGE (d:Officer {officername : DIRS.officerName})
+MERGE (r:Company {companyname : DIRS.companyName})
+CREATE (d)-[:DIRECTOR_OF]->(r)
+
+LOAD CSV WITH HEADERS FROM "https://github.com/paulbradshaw/commandline/blob/master/neo4js/dirsoutput_deduplicated.csv" AS dirs
+RETURN dirs
+RETURN dirs.companyName
+LIMIT 5
+
+DOESN"T WORK - GETS NULLS
+
+TRIED:
+LOAD CSV WITH HEADERS FROM "file:///Users/paul/Desktop/cleandesktop/reconcile/dirsoutput_deduplicated.csv" AS dirs
+RETURN dirs.companyName
+LIMIT 5
+Couldn't load the external resource at: file:/usr/local/Cellar/neo4j/3.0.3/libexec/import/Users/paul/Desktop/cleandesktop/reconcile/dirsoutput_deduplicated.csv
+
+HAD TO COPY FILE INTO THAT DIRECTORY USING TERMINAL:
+cp dirsoutput_deduplicated.csv /usr/local/Cellar/neo4j/3.0.3/libexec/import
+THEN RUN
+
+LOAD CSV WITH HEADERS FROM "file:///dirsoutput_deduplicated.csv" AS dirs
+RETURN dirs.companyName
+LIMIT 5
+
+LOAD CSV WITH HEADERS FROM "file:///dirsoutput_deduplicated.csv" AS DIRS
+MERGE (d:Officer {officername : DIRS.officerName})
+MERGE (r:Company {companyname : DIRS.companyName})
+CREATE (d)-[:DIRECTOR_OF]->(r)
+
+PART 2
+
+CYPHER QUERY LANGUAGE
+
+Must start with MATCH and end with a RETURN
+Add WHERE to filter
+
+MATCH (n:Recipient)
+WHERE n.recipientName = 'Green Party'
+RETURN n
+
+
+WHERE n.recipientName =~ '.*Green Party.*'
+
+Regex works: 
+
+MATCH (n:Recipient)
+WHERE n.recipientname =~ 'Gr[aeiou]en Party'
+RETURN n
+
+SHOW RELATIONSHIPS WHERE AMOUNT > etc.
+MATCH (d)-[t:DONATED_TO]->(r)
+WHERE t.amount >= 1000000
+RETURN t
+
+The t can be anything - but has to be consistently used
+
+Multiple criteria for multiple data - note the r.recipientname but t.amount and t: and RETURN t
+
+MATCH (d)-[t:DONATED_TO]->(r)
+WHERE t.amount >= 1000000 AND r.recipientname =~ ".*Leave.*"
+RETURN t
+
+Matching where people have donated to both Lab and Con
+
+MATCH (d:Donor)-[to1:DONATED_TO]->(lab:Recipient)
+MATCH (d:Donor)-[to2:DONATED_TO]->(con:Recipient)
+WHERE lab.recipientname = "Labour Party" AND con.recipientname = 'Conservative and Unionist Party'
+RETURN d,to1,to2, lab,con
+
+click on STAR TO SEE SAMPLE QUERIES
+Click on star on right to add a query to this
+
