@@ -1,0 +1,14 @@
+---
+title: "Network analysis with Network D3"
+author: "Paul Bradshaw"
+date: "11 February 2017"
+output: html_document
+---
+
+# Creating network graphs with [NetworkD3](https://christophergandrud.github.io/networkD3/)
+
+```{r}
+#Install the networkD3 package, and activate the library
+install.packages('networkD3')
+library(networkD3)
+```
