@@ -5,10 +5,47 @@ date: "11 February 2017"
 output: html_document
 ---
 
-# Creating network graphs with [NetworkD3](https://christophergandrud.github.io/networkD3/)
+# Creating network graphs with [NetworkD3](https://christophergandrud.github.io/networkD3/). You can [find examples on the GitHub](https://github.com/christophergandrud/networkD3/blob/master/inst/examples/examples.R)
 
 ```{r}
 #Install the networkD3 package, and activate the library
 install.packages('networkD3')
 library(networkD3)
 ```
+
+```{r}
+#Import the dataset
+chars <- read.csv('starwars/swpeople.csv')
+#Put each column into its own list
+films <- chars$film.name
+names <- chars$X..name
+```
+
+Now we need to create the nodes to generate relationships - and then generate a network from those two
+
+```{r}
+src <- names
+target <- films
+networkData <- data.frame(src, target)
+```
+
+Of course we could have just done the same by grabbing the column directly like so:
+
+`networkData <- data.frame(chars$film.name, chars$X..name)`
+
+Then draw the network diagram:
+
+```{r}
+simpleNetwork(networkData)
+```
+
+And save it as a HTML file:
+
+```{r}
+library(magrittr)
+
+simpleNetwork(networkData) %>%
+saveNetwork(file = 'swpeople.html')
+```
+
+This is still a very simple network diagram - there is no indication of the strength of relationships or which nodes appear most. 
