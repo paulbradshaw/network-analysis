@@ -49,3 +49,73 @@ saveNetwork(file = 'swpeople.html')
 ```
 
 This is still a very simple network diagram - there is no indication of the strength of relationships or which nodes appear most. 
+
+```{r}
+# Create graph with legend and varying radius
+forceNetwork(Links = MisLinks, Nodes = MisNodes, Source = "source",
+             Target = "target", Value = "value", NodeID = "name",
+             Nodesize = 'size', radiusCalculation = "d.nodesize",
+             Group = "group", opacity = 1, legend = T, bounded = F) %>%
+saveNetwork(file = 'forcenet.html')
+```
+
+Let's reverse-engineer this a little. Each data frame has 3 columns. `MisNodes` is obviously the nodes, and `MisLinks` is presumably the 'edges' - the links between nodes.
+
+Here's a hypothesis: the links dataset only contains numbers. So it can't be drawing links based on the names of each item. 
+
+The nodes dataset has two numerical columns: *group* and *size*. Group is shown in the colour coding. And size appears to determine the size of each node in the diagram. So perhaps the *index* of each row - the row number - is what the links are using.
+
+The pink items in group 7 are a little isolated. We can change one of the links like so to test if the link is affected. Before this value was 46, but we change it to 47 so it links to itself:
+
+```{r}
+#Show the values in row 109
+MisLinks[109,]
+#Show the value in the second cell in that row
+MisLinks[109,2]
+#Change the value
+MisLinks[109,2] <- 47
+```
+
+And then re-draw the network. 
+
+```{r}
+# Create graph with legend and varying radius
+forceNetwork(Links = MisLinks, Nodes = MisNodes, Source = "source",
+             Target = "target", Value = "value", NodeID = "name",
+             Nodesize = 'size', radiusCalculation = "d.nodesize",
+             Group = "group", opacity = 1, legend = T, bounded = F) %>%
+saveNetwork(file = 'forcenet3.html')
+```
+
+Note that one node is now *on its own* - it's the one in *row* 47 in the node data frame, *Jondrette*
+
+What about the *value* in the MisLinks data frame? Let's change one from 1 to 10 to see:
+
+```{r}
+MisLinks[109,3] <- 10
+```
+
+Look closely and you'll see one of the links is a lot thicker. In fact, you need to change it to at least 100 to really see:
+
+```{r}
+MisLinks[109,3] <- 100
+```
+
+So now we can conclude:
+
+* In MisNodes, *label* is used to label each node
+* *group* is used to classify each node, and colour code them accordingly if needed
+* *size* is used to control the size of each node, if needed
+* The *index* of each element will be used to connect them
+* In MisLinks, *source* begins drawing a line from one element: it uses the node's row number (index)
+* *target* ends the line, normally at the index of a different element. If it is the same, no line is drawn
+* *size* determines the thickness of the line, at least in the code that we then use.
+
+Create a subset to test this a bit further
+
+```{r}
+MisLinks3 <- MisLinks[c(1:10),]
+```
+
+Most of these link to 0 - and this turns out to be the entry in row 1. So we have a 0-based index.
+
